@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "minecraft:book"
+    },
+    {
+      "item": "podium:quill_and_inkwell_black"
+    }
+  ],
+  "result": {
+    "item": "minecraft:writable_book"
+  }
+}

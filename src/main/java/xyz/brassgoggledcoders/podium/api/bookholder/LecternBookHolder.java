@@ -14,6 +14,8 @@ import java.util.Optional;
 public class LecternBookHolder implements IBookHolder {
     private final WeakReference<LecternTileEntity> lectern;
     private boolean gettingContents = false;
+    private int lastOpenPage = -1;
+    private String pageContents = null;
 
     public LecternBookHolder(LecternTileEntity lectern) {
         this.lectern = new WeakReference<>(lectern);
@@ -30,23 +32,30 @@ public class LecternBookHolder implements IBookHolder {
     @Nullable
     @Override
     public String getOpenPage() {
+        return this.getLecternPage() + "";
+    }
+
+    private int getLecternPage() {
         return Optional.ofNullable(lectern.get())
                 .map(LecternTileEntity::getPage)
-                .orElse(0) + "";
+                .orElse(0);
     }
 
     @Nullable
     @Override
     public String getPageContents() {
-        if (!this.gettingContents) {
-            this.gettingContents = true;
-            GetPageContentsEvent getPageContentsEvent = new GetPageContentsEvent(this);
-            MinecraftForge.EVENT_BUS.post(getPageContentsEvent);
-            this.gettingContents = false;
-            return getPageContentsEvent.getPageContent();
-        } else {
-            PodiumAPI.LOGGER.error("Called 'getPageContents' from 'BookContentsEvent'");
-            return null;
+        if (this.pageContents == null || this.lastOpenPage != this.getLecternPage()) {
+            this.lastOpenPage = this.getLecternPage();
+            if (!this.gettingContents) {
+                this.gettingContents = true;
+                GetPageContentsEvent getPageContentsEvent = new GetPageContentsEvent(this);
+                MinecraftForge.EVENT_BUS.post(getPageContentsEvent);
+                this.gettingContents = false;
+                this.pageContents = getPageContentsEvent.getPageContent();
+            } else {
+                PodiumAPI.LOGGER.error("Called 'getPageContents' from 'BookContentsEvent'");
+            }
         }
+        return this.pageContents;
     }
 }

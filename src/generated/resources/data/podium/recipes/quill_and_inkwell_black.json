@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "tag": "forge:dyes/black"
+    },
+    {
+      "item": "podium:quill_and_inkwell"
+    }
+  ],
+  "result": {
+    "item": "podium:quill_and_inkwell_black"
+  }
+}

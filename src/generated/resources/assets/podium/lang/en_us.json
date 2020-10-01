@@ -1,3 +1,5 @@
 {
-  "block.podium.podium": "Podium"
+  "block.podium.podium": "Podium",
+  "item.podium.quill_and_inkwell": "Quill and Inkwell",
+  "item.podium.quill_and_inkwell_black": "Quill and Inkwell with Black Ink"
 }

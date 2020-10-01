@@ -5,6 +5,7 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.tileentity.LecternTileEntity;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.Hand;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponent;
@@ -17,6 +18,7 @@ import xyz.brassgoggledcoders.podium.Podium;
 import xyz.brassgoggledcoders.podium.api.PodiumCaps;
 import xyz.brassgoggledcoders.podium.api.bookholder.IBookHolder;
 import xyz.brassgoggledcoders.podium.api.bookholder.LecternBookHolder;
+import xyz.brassgoggledcoders.podium.api.event.CopyBookEvent;
 import xyz.brassgoggledcoders.podium.api.event.GetPageContentsEvent;
 import xyz.brassgoggledcoders.podium.api.event.GetPodiumBehaviorEvent;
 import xyz.brassgoggledcoders.podium.capability.BasicCapabilityProvider;
@@ -72,6 +74,33 @@ public class ForgeEventHandler {
                 CompoundNBT bookNBT = bookStack.getTag();
                 ListNBT pagesNBT = bookNBT.getList("pages", Constants.NBT.TAG_STRING);
                 event.setPageContent(pagesNBT.getString(page));
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void copyBook(CopyBookEvent event) {
+        ItemStack bookStack = event.getBookHolder().getItemStack();
+        Item bookItem = bookStack.getItem();
+        Hand otherHand = event.getWritingHand() == Hand.MAIN_HAND ? Hand.OFF_HAND : Hand.MAIN_HAND;
+        ItemStack otherHandStack = event.getCopier().getHeldItem(otherHand);
+        if (bookItem == Items.WRITABLE_BOOK) {
+            if (otherHandStack.getItem() == Items.WRITABLE_BOOK) {
+                if (bookStack.getTag() != null) {
+                    otherHandStack.setTag(bookStack.getTag().copy());
+                    event.useInk();
+                }
+            }
+        } else if (bookItem == Items.WRITTEN_BOOK) {
+            if (otherHandStack.getItem() == Items.WRITABLE_BOOK) {
+                if (bookStack.getTag() != null) {
+                    CompoundNBT nbt = bookStack.getTag().copy();
+                    ItemStack newBookStack = new ItemStack(Items.WRITTEN_BOOK);
+                    nbt.putInt("generation", WrittenBookItem.getGeneration(bookStack) + 1);
+                    newBookStack.setTag(nbt);
+                    event.getCopier().setHeldItem(otherHand,newBookStack);
+                    event.useInk();
+                }
             }
         }
     }

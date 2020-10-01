@@ -11,6 +11,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import xyz.brassgoggledcoders.podium.api.bookholder.IBookHolder;
 import xyz.brassgoggledcoders.podium.capability.EmptyCapabilityStorage;
 import xyz.brassgoggledcoders.podium.content.PodiumBlocks;
+import xyz.brassgoggledcoders.podium.content.PodiumItems;
 
 @Mod(Podium.ID)
 public class Podium {
@@ -23,6 +24,7 @@ public class Podium {
         modBus.addListener(this::commonSetup);
 
         PodiumBlocks.setup();
+        PodiumItems.setup();
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {

@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "PPP",
+    " F ",
+    "SSS"
+  ],
+  "key": {
+    "P": {
+      "tag": "minecraft:planks"
+    },
+    "F": {
+      "tag": "minecraft:fences"
+    },
+    "S": {
+      "tag": "minecraft:wooden_slabs"
+    }
+  },
+  "result": {
+    "item": "podium:podium"
+  }
+}

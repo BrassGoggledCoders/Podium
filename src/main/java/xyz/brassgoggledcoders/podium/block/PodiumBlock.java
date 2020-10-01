@@ -3,6 +3,7 @@ package xyz.brassgoggledcoders.podium.block;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.HorizontalBlock;
+import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItemUseContext;
 import net.minecraft.item.ItemStack;
@@ -21,16 +22,20 @@ import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.util.math.shapes.VoxelShapes;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
+import net.minecraft.world.server.ServerWorld;
 import xyz.brassgoggledcoders.podium.content.PodiumBlocks;
 import xyz.brassgoggledcoders.podium.tileentity.PodiumTileEntity;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.Random;
 
 public class PodiumBlock extends Block {
     public static final DirectionProperty FACING = HorizontalBlock.HORIZONTAL_FACING;
     public static final BooleanProperty HAS_BOOK = BlockStateProperties.HAS_BOOK;
+    public static final BooleanProperty POWERED = BlockStateProperties.POWERED;
+
     public static final VoxelShape BASE_SHAPE = Block.makeCuboidShape(0.0D, 0.0D, 0.0D, 16.0D, 2.0D, 16.0D);
     public static final VoxelShape POST_SHAPE = Block.makeCuboidShape(4.0D, 2.0D, 4.0D, 12.0D, 14.0D, 12.0D);
     public static final VoxelShape COMMON_SHAPE = VoxelShapes.or(BASE_SHAPE, POST_SHAPE);
@@ -46,6 +51,7 @@ public class PodiumBlock extends Block {
         this.setDefaultState(this.stateContainer.getBaseState()
                 .with(FACING, Direction.NORTH)
                 .with(HAS_BOOK, false)
+                .with(POWERED, false)
         );
     }
 
@@ -58,7 +64,7 @@ public class PodiumBlock extends Block {
         if (tileEntity instanceof PodiumTileEntity) {
             PodiumTileEntity podiumTileEntity = (PodiumTileEntity) tileEntity;
             ItemStack heldItem = player.getHeldItem(hand);
-            if (podiumTileEntity.getDisplayItemStack().isEmpty()) {
+            if (!heldItem.isEmpty() && podiumTileEntity.getDisplayItemStack().isEmpty()) {
                 podiumTileEntity.setDisplayItemStack(heldItem);
                 world.setBlockState(pos, state.with(HAS_BOOK, true));
                 return ActionResultType.SUCCESS;
@@ -72,7 +78,7 @@ public class PodiumBlock extends Block {
                 } else {
                     return podiumTileEntity.activateBehavior(player);
                 }
-             }
+            }
         }
         return ActionResultType.PASS;
     }
@@ -112,6 +118,24 @@ public class PodiumBlock extends Block {
         }
 
         return this.getDefaultState().with(FACING, context.getPlacementHorizontalFacing().getOpposite()).with(HAS_BOOK, flag);
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public boolean hasComparatorInputOverride(@Nonnull BlockState state) {
+        return true;
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    @ParametersAreNonnullByDefault
+    public int getComparatorInputOverride(BlockState blockState, World world, BlockPos pos) {
+        TileEntity tileEntity = world.getTileEntity(pos);
+        if (tileEntity instanceof PodiumTileEntity) {
+            return ((PodiumTileEntity) tileEntity).getComparatorSignal();
+        } else {
+            return 0;
+        }
     }
 
     @Override
@@ -157,7 +181,7 @@ public class PodiumBlock extends Block {
 
     @Override
     protected void fillStateContainer(StateContainer.Builder<Block, BlockState> builder) {
-        builder.add(FACING, HAS_BOOK);
+        builder.add(FACING, HAS_BOOK, POWERED);
     }
 
 
@@ -166,6 +190,14 @@ public class PodiumBlock extends Block {
     @ParametersAreNonnullByDefault
     public void onReplaced(BlockState state, World world, BlockPos pos, BlockState newState, boolean isMoving) {
         if (!state.isIn(newState.getBlock())) {
+            if (state.get(HAS_BOOK)) {
+                this.dropBook(state, world, pos);
+            }
+
+            if (state.get(POWERED)) {
+                world.notifyNeighborsOfStateChange(pos.down(), this);
+            }
+
             super.onReplaced(state, world, pos, newState, isMoving);
         }
     }
@@ -175,5 +207,63 @@ public class PodiumBlock extends Block {
     @ParametersAreNonnullByDefault
     public boolean allowsMovement(BlockState state, IBlockReader blockReader, BlockPos pos, PathType type) {
         return false;
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    @ParametersAreNonnullByDefault
+    public void tick(BlockState blockState, ServerWorld world, BlockPos pos, Random rand) {
+        setPowered(world, pos, blockState, false);
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    @ParametersAreNonnullByDefault
+    public boolean canProvidePower(BlockState blockState) {
+        return true;
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    @ParametersAreNonnullByDefault
+    public int getWeakPower(BlockState blockState, IBlockReader blockReader, BlockPos pos, Direction side) {
+        return blockState.get(POWERED) ? 15 : 0;
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    @ParametersAreNonnullByDefault
+    public int getStrongPower(BlockState blockState, IBlockReader blockReader, BlockPos pos, Direction side) {
+        return side == Direction.UP && blockState.get(POWERED) ? 15 : 0;
+    }
+
+    public static void pulse(World worldIn, BlockPos pos, BlockState state) {
+        setPowered(worldIn, pos, state, true);
+        worldIn.getPendingBlockTicks().scheduleTick(pos, state.getBlock(), 2);
+        worldIn.playEvent(1043, pos, 0);
+    }
+
+    private static void setPowered(World world, BlockPos pos, BlockState blockState, boolean powered) {
+        world.setBlockState(pos, blockState.with(POWERED, powered), 3);
+        notifyNeighbors(world, pos, blockState);
+    }
+
+    private static void notifyNeighbors(World world, BlockPos pos, BlockState blockState) {
+        world.notifyNeighborsOfStateChange(pos.down(), blockState.getBlock());
+    }
+
+    private void dropBook(BlockState state, World world, BlockPos pos) {
+        TileEntity tileentity = world.getTileEntity(pos);
+        if (tileentity instanceof PodiumTileEntity) {
+            PodiumTileEntity podiumTileEntity = (PodiumTileEntity) tileentity;
+            Direction direction = state.get(FACING);
+            ItemStack itemstack = podiumTileEntity.takeDisplayItemStack();
+            float f = 0.25F * (float) direction.getXOffset();
+            float f1 = 0.25F * (float) direction.getZOffset();
+            ItemEntity itemEntity = new ItemEntity(world, (double) pos.getX() + 0.5D + (double) f, (double) (pos.getY() + 1), (double) pos.getZ() + 0.5D + (double) f1, itemstack);
+            itemEntity.setDefaultPickupDelay();
+            world.addEntity(itemEntity);
+        }
+
     }
 }

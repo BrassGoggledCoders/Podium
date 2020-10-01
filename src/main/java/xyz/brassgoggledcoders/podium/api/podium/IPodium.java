@@ -22,8 +22,10 @@ public interface IPodium {
     @Nonnull
     IWorld getPodiumWorld();
 
-    void pulseRedstone(int power);
+    void pulseRedstone();
 
     @Nonnull
     PodiumInventory getPodiumInventory();
+
+    void requestSave();
 }

@@ -40,9 +40,9 @@ public class ForgeEventHandler {
 
     @SubscribeEvent
     public static void handleGetPodiumBehavior(GetPodiumBehaviorEvent event) {
-        Item item = event.getPodium().getDisplayItemStack().getItem();
+        Item item = event.getItemStack().getItem();
         if (item == Items.WRITABLE_BOOK || item == Items.WRITTEN_BOOK) {
-            event.setPodiumBehavior(new BookPodiumBehavior(event.getPodium()));
+            event.setPodiumBehavior(new BookPodiumBehavior(event.getPodium(), WrittenBookItem::getPageCount));
         }
     }
 

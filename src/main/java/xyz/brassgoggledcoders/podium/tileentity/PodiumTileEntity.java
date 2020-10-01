@@ -2,6 +2,7 @@ package xyz.brassgoggledcoders.podium.tileentity;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.play.server.SUpdateTileEntityPacket;
@@ -29,7 +30,17 @@ public class PodiumTileEntity extends TileEntity implements IPodium {
     public PodiumTileEntity(TileEntityType<? extends PodiumTileEntity> tileEntityType) {
         super(tileEntityType);
         this.podiumInventory = new PodiumInventory(ItemStack.EMPTY, this::canPlayerUse);
-        this.podiumInventory.addListener(inventory -> this.setHasItem(!inventory.getStackInSlot(0).isEmpty()));
+        this.podiumInventory.addListener(this::inventoryListener);
+    }
+
+    public void inventoryListener(IInventory inventory) {
+        if (!inventory.getStackInSlot(0).isEmpty()) {
+            this.podiumBehavior = PodiumAPI.getPodiumBehavior(this, inventory.getStackInSlot(0));
+            this.setHasItem(true);
+        } else {
+            this.podiumBehavior = null;
+            this.setHasItem(false);
+        }
     }
 
     public ActionResultType activateBehavior(PlayerEntity playerEntity) {
@@ -88,6 +99,7 @@ public class PodiumTileEntity extends TileEntity implements IPodium {
             this.setHasItem(true);
         } else {
             this.podiumBehavior = null;
+            this.podiumInventory.setInventorySlotContents(0, ItemStack.EMPTY);
             this.setHasItem(false);
         }
     }
@@ -100,14 +112,23 @@ public class PodiumTileEntity extends TileEntity implements IPodium {
     }
 
     @Override
-    public void pulseRedstone(int power) {
+    public void pulseRedstone() {
+        PodiumBlock.pulse(this.getWorld(), this.getPodiumPos(), this.getPodiumBlockState());
+    }
 
+    public int getComparatorSignal() {
+        return this.getPodiumBehavior() != null ? this.getPodiumBehavior().getComparatorSignal() : 0;
     }
 
     @Nonnull
     @Override
     public PodiumInventory getPodiumInventory() {
         return this.podiumInventory;
+    }
+
+    @Override
+    public void requestSave() {
+        this.markDirty();
     }
 
     @Nonnull

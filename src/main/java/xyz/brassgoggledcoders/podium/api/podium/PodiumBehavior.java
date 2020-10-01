@@ -16,7 +16,7 @@ public class PodiumBehavior implements INBTSerializable<CompoundNBT>, Predicate<
     }
 
     public int getComparatorSignal() {
-        return -1;
+        return 0;
     }
 
     public IPodium getPodium() {

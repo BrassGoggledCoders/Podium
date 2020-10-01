@@ -37,6 +37,11 @@ public class QuillAndInkWellItem extends Item {
     }
 
     @Override
+    public boolean hasContainerItem(ItemStack stack) {
+        return true;
+    }
+
+    @Override
     public ItemStack getContainerItem(ItemStack itemStack) {
         ItemStack resultItemStack = itemStack.copy();
         if (resultItemStack.attemptDamageItem(1, random, null)) {

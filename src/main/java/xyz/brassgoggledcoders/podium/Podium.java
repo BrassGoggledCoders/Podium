@@ -10,6 +10,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import xyz.brassgoggledcoders.podium.api.bookholder.IBookHolder;
 import xyz.brassgoggledcoders.podium.capability.EmptyCapabilityStorage;
+import xyz.brassgoggledcoders.podium.compat.immersiveengineering.PodiumIE;
 import xyz.brassgoggledcoders.podium.content.PodiumBlocks;
 import xyz.brassgoggledcoders.podium.content.PodiumItems;
 
@@ -25,6 +26,8 @@ public class Podium {
 
         PodiumBlocks.setup();
         PodiumItems.setup();
+
+        PodiumIE.setup();
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {

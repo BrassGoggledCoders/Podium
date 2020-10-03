@@ -36,6 +36,10 @@ repositories {
         name = "Registrate"
         url = "http://maven.tterrag.com/"
     }
+    maven {
+        name = "Immersive Engineering"
+        url = "https://maven.blamejared.com"
+    }
 }
 
 test {
@@ -135,6 +139,8 @@ dependencies {
     def registrate = "com.tterrag.registrate:Registrate:MC${registrate_version}"
     implementation fg.deobf(registrate)
     shade registrate
+
+    compile fg.deobf("blusunrize.immersiveengineering:ImmersiveEngineering:1.16.3-4.1.0-pre.64")
 
     testImplementation('org.junit.jupiter:junit-jupiter:5.6.1')
 }

@@ -1,6 +1,6 @@
 modLoader="javafml"
 loaderVersion="[${loader_version},)"
-issueTrackerURL="https://github.com/Brass-Goggled-Coders/Podium/issues"
+issueTrackerURL="https://github.com/BrassGoggledCoders/Podium/issues"
 license="The MIT License (MIT)"
 
 [[mods]]
